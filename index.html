@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>中学歴史 演習アプリ</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 15px; background: #f9f9f9; }
+    .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; }
+    button { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 5px 0; }
+    button:hover { background: #0056b3; }
+    input[type="text"] { width: 100%; padding: 8px; box-sizing: border-box; margin: 8px 0; }
+    .hidden { display: none; }
+    ul { list-style: none; padding: 0; }
+    li { background: #eee; margin: 4px 0; padding: 8px; border-radius: 4px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+
+  <h1>中学歴史 学習アプリ</h1>
+
+  <!-- 1. 単元選択画面 -->
+  <div id="unit-selection" class="card">
+    <h2>単元を選ぶ</h2>
+    <div id="unit-buttons"></div>
+  </div>
+
+  <!-- 2. クイズ画面 -->
+  <div id="quiz-screen" class="card hidden">
+    <h2 id="quiz-title"></h2>
+    <p id="question-text"></p>
+    
+    <!-- 選択肢（用語問題用） -->
+    <div id="choices-container"></div>
+
+    <!-- 記述入力（説明問題用） -->
+    <div id="input-container" class="hidden">
+      <input type="text" id="user-answer" placeholder="解答を入力">
+      <button onclick="checkTextAnswer()">回答する</button>
+    </div>
+
+    <p id="feedback"></p>
+    <button id="next-btn" class="hidden" onclick="nextQuestion()">次の問題へ</button>
+  </div>
+
+  <!-- 3. 学習記録画面 -->
+  <div id="logs-screen" class="card">
+    <h2>学習記録</h2>
+    <ul id="log-list"></ul>
+    <button onclick="clearLogs()" style="background:#dc3545;">記録をクリア</button>
+  </div>
+
+  <script>
+    // 問題データ定義（単元ごとに拡張可能）
+    const quizData = {
+      "unit1": {
+        title: "歴史のあけぼのと日本列島",
+        questions: [
+          { type: "choice", q: "旧石器時代に使われていた、石を打ち欠いて作った石器は？", choices: ["打製石器", "磨製石器", "縄文土器"], a: "打製石器" },
+          { type: "text", q: "縄文土器の特徴を「表面の模様」に触れて簡単に説明しなさい。", keyword: "縄", sample: "表面に縄の目がつけられている点。" }
+        ]
+      },
+      "unit2": {
+        title: "古代国家の形成とあゆみ",
+        questions: [
+          { type: "choice", q: "604年に聖徳太子が制定した、役人の心得を示した法は？", choices: ["大宝律令", "十七条の憲法", "御成敗式目"], a: "十七条の憲法" },
+          { type: "text", q: "大化の改新によって、土地と民はどのように変化したか。「公地公民」の語を用いて書け。", keyword: "公地公民", sample: "豪族の私有地・私民を国のものとする公地公民が行われた。" }
+        ]
+      }
+    };
+
+    let currentUnitKey = "";
+    let currentQIndex = 0;
+    let score = 0;
+
+    // 初期化：単元ボタンの生成
+    const unitBtns = document.getElementById("unit-buttons");
+    for (const key in quizData) {
+      const btn = document.createElement("button");
+      btn.innerText = quizData[key].title;
+      btn.style.display = "block";
+      btn.style.width = "100%";
+      btn.onclick = () => startQuiz(key);
+      unitBtns.appendChild(btn);
+    }
+    renderLogs();
+
+    // クイズ開始
+    function startQuiz(unitKey) {
+      currentUnitKey = unitKey;
+      currentQIndex = 0;
+      score = 0;
+      document.getElementById("unit-selection").classList.add("hidden");
+      document.getElementById("quiz-screen").classList.remove("hidden");
+      showQuestion();
+    }
+
+    // 問題表示
+    function showQuestion() {
+      const unit = quizData[currentUnitKey];
+      const q = unit.questions[currentQIndex];
+      
+      document.getElementById("quiz-title").innerText = `${unit.title} (${currentQIndex + 1}/${unit.questions.length})`;       document.getElementById("question-text").innerText = q.q;       document.getElementById("feedback").innerText = "";       document.getElementById("next-btn").classList.add("hidden");        const choicesContainer = document.getElementById("choices-container");       const inputContainer = document.getElementById("input-container");       choicesContainer.innerHTML = "";       document.getElementById("user-answer").value = "";        if (q.type === "choice") {         choicesContainer.classList.remove("hidden");         inputContainer.classList.add("hidden");         q.choices.forEach(choice => {           const btn = document.createElement("button");           btn.innerText = choice;           btn.style.display = "block";           btn.onclick = () => checkChoiceAnswer(choice);           choicesContainer.appendChild(btn);         });       } else {         choicesContainer.classList.add("hidden");         inputContainer.classList.remove("hidden");       }     }      // 選択肢の正誤判定     function checkChoiceAnswer(selected) {       const q = quizData[currentUnitKey].questions[currentQIndex];       const feedback = document.getElementById("feedback");       if (selected === q.a) {         feedback.innerText = "⭕ 正解！";         feedback.style.color = "green";         score++;       } else {         feedback.innerText = `❌ 不正解... 正解: ${q.a}`;
+        feedback.style.color = "red";
+      }
+      document.getElementById("next-btn").classList.remove("hidden");
+    }
+
+    // 記述式の正誤判定（キーワード判定＋模範解答提示）
+    function checkTextAnswer() {
+      const q = quizData[currentUnitKey].questions[currentQIndex];
+      const input = document.getElementById("user-answer").value;
+      const feedback = document.getElementById("feedback");
+
+      if (input.includes(q.keyword)) {
+        feedback.innerText = `⭕ 正解判定（キーワード一致）\n【模範解答】${q.sample}`;         feedback.style.color = "green";         score++;       } else {         feedback.innerText = `❌ 不正解（キーワード「${q.keyword}」が必要）\n【模範解答】${q.sample}`;         feedback.style.color = "red";       }       document.getElementById("next-btn").classList.remove("hidden");     }      // 次の問題または終了処理     function nextQuestion() {       currentQIndex++;       const questions = quizData[currentUnitKey].questions;       if (currentQIndex < questions.length) {         showQuestion();       } else {         finishQuiz();       }     }      // 終了と学習記録の保存     function finishQuiz() {       const unitTitle = quizData[currentUnitKey].title;       const total = quizData[currentUnitKey].questions.length;              // ローカルストレージへ保存       saveLog(unitTitle, score, total);        alert(`終了！ スコア: ${score} / ${total}`);       document.getElementById("quiz-screen").classList.add("hidden");       document.getElementById("unit-selection").classList.remove("hidden");       renderLogs();     }      // 学習ログの保存処理     function saveLog(unitTitle, score, total) {       const logs = JSON.parse(localStorage.getItem("history_app_logs") \vert{}\vert{} "[]");       const now = new Date();       const timeStr = `${now.getMonth()+1}/${now.getDate()}${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;              logs.unshift({         date: timeStr,         unit: unitTitle,         result: `${score}/${total}問正解`       });        localStorage.setItem("history_app_logs", JSON.stringify(logs));     }      // 学習ログの描画     function renderLogs() {       const logs = JSON.parse(localStorage.getItem("history_app_logs") \vert{}\vert{} "[]");       const logList = document.getElementById("log-list");       logList.innerHTML = "";              if (logs.length === 0) {         logList.innerHTML = "<li>まだ記録はありません。</li>";         return;       }        logs.forEach(log => {         const li = document.createElement("li");         li.innerText = `[${log.date}] ${log.unit} -${log.result}`;
+        logList.appendChild(li);
+      });
+    }
+
+    function clearLogs() {
+      if (confirm("学習記録を消去しますか？")) {
+        localStorage.removeItem("history_app_logs");
+        renderLogs();
+      }
+    }
+  </script>
+</body>
+</html>
