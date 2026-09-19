@@ -5,11 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>中学歴史 学習アプリ</title>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f4f6f8; color: #333; }
+    body { font-family: sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; background: #f4f6f8; color: #333; }
     h1 { text-align: center; font-size: 1.5rem; margin-bottom: 20px; }
     .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
     h2 { font-size: 1.2rem; margin-top: 0; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 8px; }
-    .btn { background: #3b82f6; color: white; border: none; padding: 12px 16px; border-radius: 8px; cursor: pointer; font-size: 1rem; width: 100%; text-align: left; margin-bottom: 10px; transition: background 0.2s; }
+    .chapter-title { font-weight: bold; color: #1e3a8a; background: #e0e7ff; padding: 8px 12px; border-radius: 6px; margin: 15px 0 8px 0; font-size: 0.95rem; }
+    .btn { background: #3b82f6; color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; font-size: 0.95rem; width: 100%; text-align: left; margin-bottom: 6px; transition: background 0.2s; }
     .btn:hover { background: #2563eb; }
     .btn-red { background: #ef4444; width: auto; font-size: 0.9rem; padding: 8px 12px; }
     .btn-red:hover { background: #dc2626; }
@@ -28,8 +29,8 @@
 
   <!-- 1. 単元選択画面 -->
   <div id="unit-selection" class="card">
-    <h2>単元を選ぶ</h2>
-    <div id="unit-buttons"></div>
+    <h2>単元（章・節）を選ぶ</h2>
+    <div id="unit-container"></div>
   </div>
 
   <!-- 2. クイズ画面 -->
@@ -42,7 +43,7 @@
 
     <!-- 記述入力（説明問題用） -->
     <div id="input-container" class="hidden">
-      <input type="text" id="user-answer" placeholder="解答を入力（例：縄、公地公民など）">
+      <input type="text" id="user-answer" placeholder="解答を入力">
       <button class="btn btn-action" onclick="checkTextAnswer()">回答する</button>
     </div>
 
@@ -60,50 +61,269 @@
   </div>
 
   <script>
-    // 問題データ
-    const quizData = {
-      "unit1": {
-        title: "1. 歴史のあけぼのと日本列島",
-        questions: [
-          { type: "choice", q: "旧石器時代に使われていた、石を打ち欠いて作った石器は？", choices: ["打製石器", "磨製石器", "縄文土器"], a: "打製石器" },
-          { type: "text", q: "縄文土器の特徴を「縄」という言葉を使って説明しなさい。", keyword: "縄", sample: "表面に縄の目がつけられている点。" }
+    // 教科書の目ちに準拠した問題データ（全7章・22節）
+    const quizData = [
+      {
+        chapter: "第1章 歴史のとらえ方と調べ方",
+        units: [
+          {
+            id: "1-1",
+            title: "第1節 歴史の流れと時代区分",
+            questions: [
+              { type: "choice", q: "歴史の時代区分で、旧石器時代や縄文時代などが含まれる最も古い区分は？", choices: ["古代", "中世", "近世"], a: "古代" }
+            ]
+          },
+          {
+            id: "1-2",
+            title: "第2節 歴史の調べ方・まとめ方・発表のしかた",
+            questions: [
+              { type: "choice", q: "歴史の調査において、当時の出来事が書かれた文書や遺物を何と呼ぶか？", choices: ["史料", "図鑑", "年表"], a: "史料" }
+            ]
+          }
         ]
       },
-      "unit2": {
-        title: "2. 古代国家の形成とあゆみ",
-        questions: [
-          { type: "choice", q: "604年に聖徳太子が制定した、役人の心得を示した法は？", choices: ["大宝律令", "十七条の憲法", "御成敗式目"], a: "十七条の憲法" },
-          { type: "text", q: "大化の改新によって土地や民はどう変化したか。「公地公民」を入れて説明しなさい。", keyword: "公地公民", sample: "豪族の私有地・私民を国のものとする公地公民が行われた。" }
+      {
+        chapter: "第2章 古代国家の成立と東アジア",
+        units: [
+          {
+            id: "2-1",
+            title: "第1節 人類の登場から文明の発生へ",
+            questions: [
+              { type: "choice", q: "打製石器を使い、狩りや採集を行っていた時代は？", choices: ["旧石器時代", "新石器時代", "縄文時代"], a: "旧石器時代" }
+            ]
+          },
+          {
+            id: "2-2",
+            title: "第2節 東アジアのなかの倭(日本)",
+            questions: [
+              { type: "choice", q: "1世紀ごろ、漢（中国）の皇帝から金印を授かったとされる倭の国は？", choices: ["奴国", "邪馬台国", "大和政権"], a: "奴国" }
+            ]
+          },
+          {
+            id: "2-3",
+            title: "第3節 中国になった国家づくり",
+            questions: [
+              { type: "choice", q: "604年に聖徳太子が制定した、役人の心得を示した法は？", choices: ["十七条の憲法", "大宝律令", "御成敗式目"], a: "十七条の憲法" },
+              { type: "text", q: "大化の改新によって行われた、土地と民を国のものとする制度を何というか。", keyword: "公地公民", sample: "公地公民の制" }
+            ]
+          },
+          {
+            id: "2-4",
+            title: "第4節 展開する天皇・貴族の政治",
+            questions: [
+              { type: "choice", q: "平安時代に藤原氏が行った、天皇が幼い時は摂政、成人後は関白となって実権を握る政治は？", choices: ["摂関政治", "院政", "武家政治"], a: "摂関政治" }
+            ]
+          }
+        ]
+      },
+      {
+        chapter: "第3章 武家政権の成長と東アジア",
+        units: [
+          {
+            id: "3-1",
+            title: "第1節 武士の世の始まり",
+            questions: [
+              { type: "choice", q: "1192年ごろ、源頼朝が開いた武家政権は？", choices: ["鎌倉幕府", "室町幕府", "江戸幕府"], a: "鎌倉幕府" }
+            ]
+          },
+          {
+            id: "3-2",
+            title: "第2節 武家政権の内と外",
+            questions: [
+              { type: "choice", q: "13世紀後半、元（フビライ・ハン）が2度にわたって日本に攻め寄せてきた出来事は？", choices: ["元寇", "応仁の乱", "承久の乱"], a: "元寇" }
+            ]
+          },
+          {
+            id: "3-3",
+            title: "第3節 人々の結びつきが強まる社会",
+            questions: [
+              { type: "choice", q: "足利尊氏が開いた幕府は？", choices: ["室町幕府", "鎌倉幕府", "江戸幕府"], a: "室町幕府" }
+            ]
+          }
+        ]
+      },
+      {
+        chapter: "第4章 武家政権の展開と世界の動き",
+        units: [
+          {
+            id: "4-1",
+            title: "第1節 大航海によって結びつく世界",
+            questions: [
+              { type: "choice", q: "1543年、種子島に漂着したポルトガル人によって日本に伝えられた武器は？", choices: ["鉄砲", "弓矢", "刀"], a: "鉄砲" }
+            ]
+          },
+          {
+            id: "4-2",
+            title: "第2節 戦乱から全国統一へ",
+            questions: [
+              { type: "choice", q: "太閤検地や刀狩を行い、全国を統一した人物は？", choices: ["豊臣秀吉", "織田信長", "徳川家康"], a: "豊臣秀吉" }
+            ]
+          },
+          {
+            id: "4-3",
+            title: "第3節 武士による全国支配の完成",
+            questions: [
+              { type: "choice", q: "1603年、徳川家康が開いた幕府は？", choices: ["江戸幕府", "室町幕府", "鎌倉幕府"], a: "江戸幕府" }
+            ]
+          },
+          {
+            id: "4-4",
+            title: "第4節 天下泰平の世の中",
+            questions: [
+              { type: "choice", q: "幕府がオランダ・中国・朝鮮・琉球・アイヌ以外との交友・貿易を制限した体制は？", choices: ["鎖国", "開国", "上意討ち"], a: "鎖国" }
+            ]
+          },
+          {
+            id: "4-5",
+            title: "第5節 社会の変化と幕府の対策",
+            questions: [
+              { type: "choice", q: "享保の改革を行った江戸幕府第8代将軍は？", choices: ["徳川吉宗", "徳川家光", "徳川綱吉"], a: "徳川吉宗" }
+            ]
+          }
+        ]
+      },
+      {
+        chapter: "第5章 近代国家の歩みと国際社会",
+        units: [
+          {
+            id: "5-1",
+            title: "第1節 欧米諸国における近代化",
+            questions: [
+              { type: "choice", q: "18世紀後半のイギリスで起こった、産業や社会の大きな変化は？", choices: ["産業革命", "市民革命", "農業革命"], a: "産業革命" }
+            ]
+          },
+          {
+            id: "5-2",
+            title: "第2節 開国と幕府の終わり",
+            questions: [
+              { type: "choice", q: "1853年、ペリー率いる黒船が来航した場所は？", choices: ["浦賀", "下田", "長崎"], a: "浦賀" }
+            ]
+          },
+          {
+            id: "5-3",
+            title: "第3節 明治政府による近代化の始まり",
+            questions: [
+              { type: "choice", q: "1889年に発布された、日本初の近代的な憲法は？", choices: ["大日本帝国憲法", "日本国憲法", "御成敗式目"], a: "大日本帝国憲法" }
+            ]
+          },
+          {
+            id: "5-4",
+            title: "第4節 近代国家への歩み",
+            questions: [
+              { type: "choice", q: "1894年に起こった、日本と清（中国）との戦争は？", choices: ["日清戦争", "日露戦争", "太平洋戦争"], a: "日清戦争" }
+            ]
+          },
+          {
+            id: "5-5",
+            title: "第5節 帝国主義と日本",
+            questions: [
+              { type: "choice", q: "1904年に起こった、日本とロシアとの戦争は？", choices: ["日露戦争", "日清戦争", "第一次世界大戦"], a: "日露戦争" }
+            ]
+          },
+          {
+            id: "5-6",
+            title: "第6節 アジアの強国の光と影",
+            questions: [
+              { type: "choice", q: "明治時代、日本の主要な輸出産業となった繊維産業の中心は？", choices: ["製糸業・紡績業", "造船業", "製鉄業"], a: "製糸業・紡績業" }
+            ]
+          }
+        ]
+      },
+      {
+        chapter: "第6章 二度の世界大戦と日本",
+        units: [
+          {
+            id: "6-1",
+            title: "第1節 第一次世界大戦と民族独立の動き",
+            questions: [
+              { type: "choice", q: "1914年にヨーロッパで発生し、世界規模に拡大した戦争は？", choices: ["第一次世界大戦", "第二次世界大戦", "日露戦争"], a: "第一次世界大戦" }
+            ]
+          },
+          {
+            id: "6-2",
+            title: "第2節 高まるデモクラシーの意識",
+            questions: [
+              { type: "choice", q: "1925年、25歳以上のすべての男子に選挙権を与えた法律は？", choices: ["普通選挙法", "治安維持法", "徴兵令"], a: "普通選挙法" }
+            ]
+          },
+          {
+            id: "6-3",
+            title: "第3節 戦争に向かう世論",
+            questions: [
+              { type: "choice", q: "1929年にアメリカから始まり、世界中に広がった経済の混乱は？", choices: ["世界恐慌", "オイルショック", "バブル崩壊"], a: "世界恐慌" }
+            ]
+          },
+          {
+            id: "6-4",
+            title: "第4節 第二次世界大戦の惨禍",
+            questions: [
+              { type: "choice", q: "1945年8月、広島と長崎に投下された兵器は？", choices: ["原子爆弾", "毒ガス", "地雷"], a: "原子爆弾" }
+            ]
+          }
+        ]
+      },
+      {
+        chapter: "第7章 現在に続く日本と世界",
+        units: [
+          {
+            id: "7-1",
+            title: "第1節 敗戦から立ち直る日本",
+            questions: [
+              { type: "choice", q: "1946年11月3日に布告され、1947年5月3日に施行された現行の憲法は？", choices: ["日本国憲法", "大日本帝国憲法", "十七条の憲法"], a: "日本国憲法" }
+            ]
+          },
+          {
+            id: "7-2",
+            title: "第2節 世界の多極化と日本の成長",
+            questions: [
+              { type: "choice", q: "昭和30年代後半から日本で起こった、急速な経済成長の現象は？", choices: ["高度経済成長", "バブル経済", "安定成長"], a: "高度経済成長" }
+            ]
+          },
+          {
+            id: "7-3",
+            title: "第3節 これからの日本と世界",
+            questions: [
+              { type: "choice", q: "国連を中心に進められている、持続可能な開発目標の略称は？", choices: ["SDGs", "PKO", "NGO"], a: "SDGs" }
+            ]
+          }
         ]
       }
-    };
+    ];
 
-    let currentUnitKey = "";
+    let currentUnit = null;
     let currentQIndex = 0;
     let score = 0;
 
-    // 画面ロード時に実行される処理
+    // 画面ロード時に実行
     window.addEventListener('DOMContentLoaded', () => {
       renderUnitButtons();
       renderLogs();
     });
 
-    // 単元ボタンの生成
+    // 章・節の生成
     function renderUnitButtons() {
-      const unitBtns = document.getElementById("unit-buttons");
-      unitBtns.innerHTML = "";
-      for (const key in quizData) {
-        const btn = document.createElement("button");
-        btn.className = "btn";
-        btn.innerText = quizData[key].title;
-        btn.onclick = () => startQuiz(key);
-        unitBtns.appendChild(btn);
-      }
+      const container = document.getElementById("unit-container");
+      container.innerHTML = "";
+      
+      quizData.forEach(chap => {
+        const chapTitle = document.createElement("div");
+        chapTitle.className = "chapter-title";
+        chapTitle.innerText = chap.chapter;
+        container.appendChild(chapTitle);
+
+        chap.units.forEach(unit => {
+          const btn = document.createElement("button");
+          btn.className = "btn";
+          btn.innerText = unit.title;
+          btn.onclick = () => startQuiz(unit);
+          container.appendChild(btn);
+        });
+      });
     }
 
     // クイズ開始
-    function startQuiz(unitKey) {
-      currentUnitKey = unitKey;
+    function startQuiz(unit) {
+      currentUnit = unit;
       currentQIndex = 0;
       score = 0;
       document.getElementById("unit-selection").classList.add("hidden");
@@ -113,10 +333,9 @@
 
     // 問題表示
     function showQuestion() {
-      const unit = quizData[currentUnitKey];
-      const q = unit.questions[currentQIndex];
+      const q = currentUnit.questions[currentQIndex];
       
-      document.getElementById("quiz-title").innerText = `${unit.title} (${currentQIndex + 1}/${unit.questions.length}問)`;
+      document.getElementById("quiz-title").innerText = `${currentUnit.title} (${currentQIndex + 1}/${currentUnit.questions.length}問)`;
       document.getElementById("question-text").innerText = q.q;
       document.getElementById("feedback").innerText = "";
       document.getElementById("next-btn").classList.add("hidden");
@@ -144,7 +363,7 @@
 
     // 選択肢の正誤判定
     function checkChoiceAnswer(selected) {
-      const q = quizData[currentUnitKey].questions[currentQIndex];
+      const q = currentUnit.questions[currentQIndex];
       const feedback = document.getElementById("feedback");
       if (selected === q.a) {
         feedback.innerText = "⭕ 正解！";
@@ -159,7 +378,7 @@
 
     // 記述式の正誤判定
     function checkTextAnswer() {
-      const q = quizData[currentUnitKey].questions[currentQIndex];
+      const q = currentUnit.questions[currentQIndex];
       const input = document.getElementById("user-answer").value.trim();
       const feedback = document.getElementById("feedback");
 
@@ -182,8 +401,7 @@
     // 次の問題へ
     function nextQuestion() {
       currentQIndex++;
-      const questions = quizData[currentUnitKey].questions;
-      if (currentQIndex < questions.length) {
+      if (currentQIndex < currentUnit.questions.length) {
         showQuestion();
       } else {
         finishQuiz();
@@ -192,10 +410,8 @@
 
     // 終了と保存
     function finishQuiz() {
-      const unitTitle = quizData[currentUnitKey].title;
-      const total = quizData[currentUnitKey].questions.length;
-      
-      saveLog(unitTitle, score, total);
+      const total = currentUnit.questions.length;
+      saveLog(currentUnit.title, score, total);
 
       alert(`単元終了！\nスコア: ${score} / ${total} 問正解`);
       document.getElementById("quiz-screen").classList.add("hidden");
