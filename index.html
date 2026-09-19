@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>社会科 中学生の歴史 学習アプリ</title>
+  <!-- 外部の問題データファイルを読み込み -->
+  <script src="questions.js"></script>
   <style>
     body { font-family: sans-serif; max-width: 700px; margin: 0 auto; padding: 20px; background: #f4f6f8; color: #333; }
     h1 { text-align: center; font-size: 1.4rem; margin-bottom: 20px; }
@@ -89,7 +91,6 @@
   </div>
 
   <script>
-    // 目次に準拠した全22節データ（時代・地域分類付き）
     const quizData = [
       {
         chapter: "第1章 歴史のとらえ方と調べ方",
@@ -155,63 +156,6 @@
       }
     ];
 
-    // 具体的な歴史問題データベース
-    const realQuestionBank = {
-      "2-3": {
-        easy: [
-          { type: "choice", q: "【飛鳥時代】604年に聖徳太子が定めた、役人の心得を示した法は？", choices: ["十七条の憲法", "大宝律令"], a: "十七条の憲法" },
-          { type: "choice", q: "【飛鳥時代】645年に中大兄皇子らが蘇我氏を倒して始めた政治改革は？", choices: ["大化の改新", "承久の乱"], a: "大化の改新" },
-          { type: "choice", q: "【奈良時代】710年に奈良に作られた都は？", choices: ["平城京", "平安京"], a: "平城京" }
-        ],
-        normal: [
-          { type: "choice", q: "【飛鳥時代】聖徳太子が制定した、家柄にとらわれず才能のある人物を登用するための制度は？", choices: ["冠位十二階", "班田収授法", "公地公民の制", "三世一身の法"], a: "冠位十二階" },
-          { type: "choice", q: "【奈良時代】701年に制定され、唐の制度にならって日本の律令国家の骨組みを作った法令は？", choices: ["大宝律令", "十七条の憲法", "御成敗式目", "武家諸法度"], a: "大宝律令" },
-          { type: "choice", q: "【奈良時代】743年に出され、新たに開墾した土地の永年私有を認めた法律は？", choices: ["墾田永年私財法", "三世一身の法", "公地公民令", "地租改正"], a: "墾田永年私財法" }
-        ],
-        hard: [
-          { type: "text", q: "【飛鳥時代】聖徳太子が「冠位十二階」を定めた目的を「家柄」の語を使って説明しなさい。", keyword: "家柄", sample: "家柄にとらわれず、個人の才能や功績に応じた人材を登用するため。" },
-          { type: "text", q: "【飛鳥時代】大化の改新で行われた「公地公民」とはどのような制度か説明しなさい。", keyword: "土地", sample: "豪族の私有地や私民を、国の直接支配（公地・公民）とする制度。" },
-          { type: "text", q: "【奈良時代】聖武天皇が国分寺を建て、東大寺に大仏を造立した目的を説明しなさい。", keyword: "仏教", sample: "仏教の力によって社会の不安や災害を鎮め、国を守ろうとしたため。" }
-        ]
-      },
-      "3-1": {
-        easy: [
-          { type: "choice", q: "【鎌倉時代】1192年ごろ、源頼朝が開いた幕府は？", choices: ["鎌倉幕府", "室町幕府"], a: "鎌倉幕府" },
-          { type: "choice", q: "【鎌倉時代】将軍と御家人の「御恩と奉公」に基づく結びつきを何というか？", choices: ["封建制度", "律令制度"], a: "封建制度" }
-        ],
-        normal: [
-          { type: "choice", q: "【鎌倉時代】幕府から荘園や公領ごとに配置され、土地の管理や年貢の徴収を行った役職は？", choices: ["地頭", "守護", "管領", "老中"], a: "地頭" },
-          { type: "choice", q: "【鎌倉時代】1221年、後鳥羽上皇が幕府を倒そうとして起こした内乱は？", choices: ["承久の乱", "保元の乱", "平治の乱", "応仁の乱"], a: "承久の乱" }
-        ],
-        hard: [
-          { type: "text", q: "【鎌倉時代】1232年に北条泰時が定めた「御成敗式目」の目的を「裁判」という言葉を使って説明しなさい。", keyword: "裁判", sample: "武士の慣習に基づき、公正な裁判の基準を明確にするため。" }
-        ]
-      }
-    };
-
-    // 自動生成フォールバック（具体的な歴史問答付き）
-    function getFallbackQuestions(unit, level) {
-      const era = unit.era || "歴史";
-      const name = unit.title;
-
-      if (level === "easy") {
-        return [
-          { type: "choice", q: `【${era}】${name}において、当時の社会や政治で中心となった出来事・制度として正しいものは？`, choices: [`【${era}】の社会の動きに沿った歴史的事象`, `後世（現代など）の出来事`], a: `【${era}】の社会の動きに沿った歴史的事象` },
-          { type: "choice", q: `【${era}】この時代背景において重要とされる概念はどれか？`, choices: ["時代に合わせた政治・文化の発展", "一切の変化を認めない社会"], a: "時代に合わせた政治・文化の発展" }
-        ];
-      } else if (level === "normal") {
-        return [
-          { type: "choice", q: `【${era}】${name}に関する記述として、最も適切なものはどれか。`, choices: [`当時の政治や社会構造の変化を表す特徴`, "歴史的事実とは逆の記述", "他の全く異なる時代の出来事", "根拠のない創作ストーリー"], a: `当時の政治や社会構造の変化を表す特徴` },
-          { type: "choice", q: `【${era}】${name}で扱われる歴史的変化について正しく述べているものは？`, choices: ["当時の人々や権力者によって新しい制度や文化が形成された", "当時の法律や社会制度はすべて外国から強制されたものであった", "一切の文字記録や遺物が残っていない時代である", "経済活動が禁止され貨幣も使われなかった"], a: "当時の人々や権力者によって新しい制度や文化が形成された" }
-        ];
-      } else {
-        return [
-          { type: "text", q: `【${era}】${name}における社会的な変化や影響について「影響」という言葉を含めて説明しなさい。`, keyword: "影響", sample: `この時代の出来事は、後世の社会構造や人々の生活に大きな影響を与えた。` },
-          { type: "text", q: `【${era}】${name}の学習において、出来事の理由や背景を理解することが重要な理由を述べなさい。`, keyword: "背景", sample: "歴史の流れや出来事同士のつながり（背景）を正しく捉えるため。" }
-        ];
-      }
-    }
-
     let currentUnit = null;
     let currentLevel = "";
     let quizQuestions = [];
@@ -267,11 +211,15 @@
     function startQuiz(level) {
       currentLevel = level;
       
+      // questions.js の realQuestionBank から問題を取得
       let pool = [];
-      if (realQuestionBank[currentUnit.id] && realQuestionBank[currentUnit.id][level]) {
+      if (typeof realQuestionBank !== 'undefined' && realQuestionBank[currentUnit.id] && realQuestionBank[currentUnit.id][level]) {
         pool = realQuestionBank[currentUnit.id][level];
-      } else {
-        pool = getFallbackQuestions(currentUnit, level);
+      }
+
+      if (pool.length === 0) {
+        alert("この単元・難易度の問題データはまだ登録されていません。questions.js に追加してください。");
+        return;
       }
 
       quizQuestions = shuffleArray(pool);
