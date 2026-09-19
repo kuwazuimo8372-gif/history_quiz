@@ -32,6 +32,7 @@
     .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.8rem; color: white; margin-bottom: 8px; }
     .badge-choice { background: #3b82f6; }
     .badge-text { background: #8b5cf6; }
+    .unit-tag { font-size: 0.85rem; color: #1e3a8a; font-weight: bold; background: #f0fdf4; border: 1px solid #bbf7d0; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -56,6 +57,9 @@
 
   <!-- 3. クイズ画面 -->
   <div id="quiz-screen" class="card hidden">
+    <div>
+      <span id="unit-tag" class="unit-tag"></span>
+    </div>
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <span id="question-badge" class="badge"></span>
       <span id="quiz-progress" style="font-size: 0.9rem; font-weight: bold; color: #666;"></span>
@@ -85,142 +89,125 @@
   </div>
 
   <script>
-    // 章・節データ構造
+    // 目次に準拠した全22節データ（時代・地域分類付き）
     const quizData = [
       {
         chapter: "第1章 歴史のとらえ方と調べ方",
         units: [
-          { id: "1-1", title: "第1節 歴史の流れと時代区分" },
-          { id: "1-2", title: "第2節 歴史の調べ方・まとめ方・発表のしかた" }
+          { id: "1-1", title: "第1節 歴史の流れと時代区分", era: "歴史の見方・時代区分" },
+          { id: "1-2", title: "第2節 歴史の調べ方・まとめ方・発表のしかた", era: "歴史の調べ方・史料" }
         ]
       },
       {
         chapter: "第2章 古代国家の成立と東アジア",
         units: [
-          { id: "2-1", title: "第1節 人類の登場から文明の発生へ" },
-          { id: "2-2", title: "第2節 東アジアのなかの倭(日本)" },
-          { id: "2-3", title: "第3節 中国になった国家づくり" },
-          { id: "2-4", title: "第4節 展開する天皇・貴族の政治" }
+          { id: "2-1", title: "第1節 人類の登場から文明の発生へ", era: "旧石器〜古代文明" },
+          { id: "2-2", title: "第2節 東アジアのなかの倭(日本)", era: "縄文・弥生・古墳時代" },
+          { id: "2-3", title: "第3節 中国になった国家づくり", era: "飛鳥・奈良時代" },
+          { id: "2-4", title: "第4節 展開する天皇・貴族の政治", era: "平安時代" }
         ]
       },
       {
         chapter: "第3章 武家政権の成長と東アジア",
         units: [
-          { id: "3-1", title: "第1節 武士の世の始まり" },
-          { id: "3-2", title: "第2節 武家政権の内と外" },
-          { id: "3-3", title: "第3節 人々の結びつきが強まる社会" }
+          { id: "3-1", title: "第1節 武士の世の始まり", era: "鎌倉時代" },
+          { id: "3-2", title: "第2節 武家政権の内と外", era: "鎌倉〜南北朝時代" },
+          { id: "3-3", title: "第3節 人々の結びつきが強まる社会", era: "室町時代" }
         ]
       },
       {
         chapter: "第4章 武家政権の展開と世界の動き",
         units: [
-          { id: "4-1", title: "第1節 大航海によって結びつく世界" },
-          { id: "4-2", title: "第2節 戦乱から全国統一へ" },
-          { id: "4-3", title: "第3節 武士による全国支配の完成" },
-          { id: "4-4", title: "第4節 天下泰平の世の中" },
-          { id: "4-5", title: "第5節 社会の変化と幕府の対策" }
+          { id: "4-1", title: "第1節 大航海によって結びつく世界", era: "安土桃山時代（世界）" },
+          { id: "4-2", title: "第2節 戦乱から全国統一へ", era: "戦国〜安土桃山時代" },
+          { id: "4-3", title: "第3節 武士による全国支配の完成", era: "江戸時代初期" },
+          { id: "4-4", title: "第4節 天下泰平の世の中", era: "江戸時代中期" },
+          { id: "4-5", title: "第5節 社会の変化と幕府の対策", era: "江戸時代後期" }
         ]
       },
       {
         chapter: "第5章 近代国家の歩みと国際社会",
         units: [
-          { id: "5-1", title: "第1節 欧米諸国における近代化" },
-          { id: "5-2", title: "第2節 開国と幕府の終わり" },
-          { id: "5-3", title: "第3節 明治政府による近代化の始まり" },
-          { id: "5-4", title: "第4節 近代国家への歩み" },
-          { id: "5-5", title: "第5節 帝国主義と日本" },
-          { id: "5-6", title: "第6節 アジアの強国の光と影" }
+          { id: "5-1", title: "第1節 欧米諸国における近代化", era: "欧米市民社会・産業革命" },
+          { id: "5-2", title: "第2節 開国と幕府の終わり", era: "幕末（開国〜倒幕）" },
+          { id: "5-3", title: "第3節 明治政府による近代化の始まり", era: "明治時代初期" },
+          { id: "5-4", title: "第4節 近代国家への歩み", era: "明治時代中期（日清戦争）" },
+          { id: "5-5", title: "第5節 帝国主義と日本", era: "明治時代後期（日露戦争）" },
+          { id: "5-6", title: "第6節 アジアの強国の光と影", era: "明治末期〜産業の発展" }
         ]
       },
       {
         chapter: "第6章 二度の世界大戦と日本",
         units: [
-          { id: "6-1", title: "第1節 第一次世界大戦と民族独立の動き" },
-          { id: "6-2", title: "第2節 高まるデモクラシーの意識" },
-          { id: "6-3", title: "第3節 戦争に向かう世論" },
-          { id: "6-4", title: "第4節 第二次世界大戦の惨禍" }
+          { id: "6-1", title: "第1節 第一次世界大戦と民族独立の動き", era: "大正時代（第一次世界大戦）" },
+          { id: "6-2", title: "第2節 高まるデモクラシーの意識", era: "大正デモクラシー" },
+          { id: "6-3", title: "第3節 戦争に向かう世論", era: "昭和時代初期（世界恐慌）" },
+          { id: "6-4", title: "第4節 第二次世界大戦の惨禍", era: "昭和時代（太平洋戦争）" }
         ]
       },
       {
         chapter: "第7章 現在に続く日本と世界",
         units: [
-          { id: "7-1", title: "第1節 敗戦から立ち直る日本" },
-          { id: "7-2", title: "第2節 世界の多極化と日本の成長" },
-          { id: "7-3", title: "第3節 これからの日本と世界" }
+          { id: "7-1", title: "第1節 敗戦から立ち直る日本", era: "戦後復興・日本国憲法" },
+          { id: "7-2", title: "第2節 世界の多極化と日本の成長", era: "高度経済成長期" },
+          { id: "7-3", title: "第3節 これからの日本と世界", era: "現代社会・SDGs" }
         ]
       }
     ];
 
-    // 全単元の実用的な問題データベース
+    // 具体的な歴史問題データベース
     const realQuestionBank = {
-      // 1-1
-      "1-1": {
+      "2-3": {
         easy: [
-          { type: "choice", q: "歴史の時代区分で、最も古い時代はどれ？", choices: ["古代", "中世"], a: "古代" },
-          { type: "choice", q: "西暦の基準となっている人物は誰？", choices: ["キリスト", "釈迦"], a: "キリスト" },
-          { type: "choice", q: "100年を1単位とする時代の分け方は？", choices: ["世紀", "年代"], a: "世紀" }
+          { type: "choice", q: "【飛鳥時代】604年に聖徳太子が定めた、役人の心得を示した法は？", choices: ["十七条の憲法", "大宝律令"], a: "十七条の憲法" },
+          { type: "choice", q: "【飛鳥時代】645年に中大兄皇子らが蘇我氏を倒して始めた政治改革は？", choices: ["大化の改新", "承久の乱"], a: "大化の改新" },
+          { type: "choice", q: "【奈良時代】710年に奈良に作られた都は？", choices: ["平城京", "平安京"], a: "平城京" }
         ],
         normal: [
-          { type: "choice", q: "15世紀とは何年から何年までを指すか？", choices: ["1401年〜1500年", "1500年〜1599年", "1501年〜1600年", "1400年〜1499年"], a: "1401年〜1500年" },
-          { type: "choice", q: "文献や文字の記録が残っていない時代を何というか？", choices: ["先史時代", "歴史時代", "古代社会", "近代社会"], a: "先史時代" }
+          { type: "choice", q: "【飛鳥時代】聖徳太子が制定した、家柄にとらわれず才能のある人物を登用するための制度は？", choices: ["冠位十二階", "班田収授法", "公地公民の制", "三世一身の法"], a: "冠位十二階" },
+          { type: "choice", q: "【奈良時代】701年に制定され、唐の制度にならって日本の律令国家の骨組みを作った法令は？", choices: ["大宝律令", "十七条の憲法", "御成敗式目", "武家諸法度"], a: "大宝律令" },
+          { type: "choice", q: "【奈良時代】743年に出され、新たに開墾した土地の永年私有を認めた法律は？", choices: ["墾田永年私財法", "三世一身の法", "公地公民令", "地租改正"], a: "墾田永年私財法" }
         ],
         hard: [
-          { type: "text", q: "「歴史時代」と「先史時代」の違いを「文字」という言葉を使って説明しなさい。", keyword: "文字", sample: "文字による記録が残されているかどうかの違い。" },
-          { type: "text", q: "「世紀」の概念で、西暦2001年は何世紀にあたるか数字で答えなさい。", keyword: "21", sample: "21世紀" }
+          { type: "text", q: "【飛鳥時代】聖徳太子が「冠位十二階」を定めた目的を「家柄」の語を使って説明しなさい。", keyword: "家柄", sample: "家柄にとらわれず、個人の才能や功績に応じた人材を登用するため。" },
+          { type: "text", q: "【飛鳥時代】大化の改新で行われた「公地公民」とはどのような制度か説明しなさい。", keyword: "土地", sample: "豪族の私有地や私民を、国の直接支配（公地・公民）とする制度。" },
+          { type: "text", q: "【奈良時代】聖武天皇が国分寺を建て、東大寺に大仏を造立した目的を説明しなさい。", keyword: "仏教", sample: "仏教の力によって社会の不安や災害を鎮め、国を守ろうとしたため。" }
         ]
       },
-      // 3-1
       "3-1": {
         easy: [
-          { type: "choice", q: "1192年ごろ、源頼朝が開いた幕府は？", choices: ["鎌倉幕府", "室町幕府"], a: "鎌倉幕府" },
-          { type: "choice", q: "将軍と御家人の結びつき（御恩と奉公）に基づく政治体制は？", choices: ["封建制度", "律令制度"], a: "封建制度" },
-          { type: "choice", q: "幕府が国ごとに配置した軍事・警察の役職は？", choices: ["守護", "地頭"], a: "守護" }
+          { type: "choice", q: "【鎌倉時代】1192年ごろ、源頼朝が開いた幕府は？", choices: ["鎌倉幕府", "室町幕府"], a: "鎌倉幕府" },
+          { type: "choice", q: "【鎌倉時代】将軍と御家人の「御恩と奉公」に基づく結びつきを何というか？", choices: ["封建制度", "律令制度"], a: "封建制度" }
         ],
         normal: [
-          { type: "choice", q: "鎌倉幕府で、荘園や公領ごとに配置され年貢の徴収などを行った役職は？", choices: ["地頭", "守護", "管領", "老中"], a: "地頭" },
-          { type: "choice", q: "源頼朝の死後、幕府の実権を握った北条氏の役職を何というか？", choices: ["執権", "関白", "管領", "征夷大将軍"], a: "執権" },
-          { type: "choice", q: "1221年、後鳥羽上皇が幕府を倒そうとして起こした出来事は？", choices: ["承久の乱", "保元の乱", "平治の乱", "応仁の乱"], a: "承久の乱" },
-          { type: "choice", q: "1232年、北条泰時が定めた武士の法律（御成敗式目）の別名は？", choices: ["貞永式目", "建武式目", "武家諸法度", "公事方御定書"], a: "貞永式目" }
+          { type: "choice", q: "【鎌倉時代】幕府から荘園や公領ごとに配置され、土地の管理や年貢の徴収を行った役職は？", choices: ["地頭", "守護", "管領", "老中"], a: "地頭" },
+          { type: "choice", q: "【鎌倉時代】1221年、後鳥羽上皇が幕府を倒そうとして起こした内乱は？", choices: ["承久の乱", "保元の乱", "平治の乱", "応仁の乱"], a: "承久の乱" }
         ],
         hard: [
-          { type: "text", q: "将軍と御家人の関係である「御恩」と「奉公」のうち、「御恩」とは何か説明しなさい。", keyword: "土地", sample: "将軍が御家人に対して恩賞として土地を与えたり保護したりすること。" },
-          { type: "text", q: "承久の乱の後、幕府が朝廷の監視や京都の警備のために設置した役職を答えなさい。", keyword: "六波羅探題", sample: "六波羅探題" },
-          { type: "text", q: "北条泰時が「御成敗式目」を制定した目的を「裁判」の言葉を用いて説明しなさい。", keyword: "裁判", sample: "武士の慣習に基づき、裁判の基準を明確にするため。" }
-        ]
-      },
-      // 3-2
-      "3-2": {
-        easy: [
-          { type: "choice", q: "13世紀後半、元（モンゴル帝国）が日本に攻め寄せてきた出来事は？", choices: ["元寇", "応仁の乱"], a: "元寇" },
-          { type: "choice", q: "元寇で元軍の攻撃に苦戦した幕府が九州沿岸に作らせた石の壁は？", choices: ["元寇防塁", "城壁"], a: "元寇防塁" }
-        ],
-        normal: [
-          { type: "choice", q: "元寇（文永の役・弘安の役）の時の執権は誰か？", choices: ["北条時宗", "北条泰時", "北条政子", "北条高時"], a: "北条時宗" },
-          { type: "choice", q: "元寇の後、御家人が困窮したため幕府が出した借金帳消しの命令は？", choices: ["徳政令", "生類憐みの令", "武家諸法度", "惣無事令"], a: "徳政令" }
-        ],
-        hard: [
-          { type: "text", q: "元寇の後、なぜ御家人の不満が幕府に向けられたのか説明しなさい。", keyword: "恩賞", sample: "外国との防衛戦であったため、新たに奪った土地がなく十分な恩賞が与えられなかったから。" },
-          { type: "text", q: "鎌倉幕府を倒し、建武の新政を始めた天皇は誰か答えなさい。", keyword: "後醍醐", sample: "後醍醐天皇" }
+          { type: "text", q: "【鎌倉時代】1232年に北条泰時が定めた「御成敗式目」の目的を「裁判」という言葉を使って説明しなさい。", keyword: "裁判", sample: "武士の慣習に基づき、公正な裁判の基準を明確にするため。" }
         ]
       }
     };
 
-    // 汎用・フォールバック用（データ未登録単元用の実用問題）
-    function getGenericQuestions(unitId, level) {
+    // 自動生成フォールバック（具体的な歴史問答付き）
+    function getFallbackQuestions(unit, level) {
+      const era = unit.era || "歴史";
+      const name = unit.title;
+
       if (level === "easy") {
         return [
-          { type: "choice", q: `【単元 ${unitId}】この時代に社会の中心となった人物や制度について、正しい記述を選びなさい。`, choices: ["当時の社会規範や法に基づいた政治が行われた", "他国の文化や制度を一切取り入れなかった"], a: "当時の社会規範や法に基づいた政治が行われた" },
-          { type: "choice", q: `【単元 ${unitId}】歴史的な出来事の分析において適切な姿勢はどれか。`, choices: ["原因と結果（因果関係）に注目する", "暗記のみを行い時代背景は無視する"], a: "原因と結果（因果関係）に注目する" }
+          { type: "choice", q: `【${era}】${name}において、当時の社会や政治で中心となった出来事・制度として正しいものは？`, choices: [`【${era}】の社会の動きに沿った歴史的事象`, `後世（現代など）の出来事`], a: `【${era}】の社会の動きに沿った歴史的事象` },
+          { type: "choice", q: `【${era}】この時代背景において重要とされる概念はどれか？`, choices: ["時代に合わせた政治・文化の発展", "一切の変化を認めない社会"], a: "時代に合わせた政治・文化の発展" }
         ];
       } else if (level === "normal") {
         return [
-          { type: "choice", q: `【単元 ${unitId}】この単元で扱われる歴史的変化や社会の仕組みとして正しいものはどれか。`, choices: ["政治や経済の仕組みが変化し、新しい社会構造が形作られた", "古代から現在まで一切の制度変更が行われなかった", "外国との貿易や交流が完全に途絶えた", "文化や宗教の発展が全面的に禁止された"], a: "政治や経済の仕組みが変化し、新しい社会構造が形作られた" },
-          { type: "choice", q: `【単元 ${unitId}】この時代の史料や文化財に関する記述として最も適切なものはどれか。`, choices: ["当時の人々が残した文献や遺物は歴史解明の貴重な手かがりとなる", "歴史研究においては口頭の噂話のみが信用される", "建造物や美術工芸品は歴史の学習には役立たない", "文字記録はすべて後世の偽作であるため価値がない"], a: "当時の人々が残した文献や遺物は歴史解明の貴重な手かがりとなる" }
+          { type: "choice", q: `【${era}】${name}に関する記述として、最も適切なものはどれか。`, choices: [`当時の政治や社会構造の変化を表す特徴`, "歴史的事実とは逆の記述", "他の全く異なる時代の出来事", "根拠のない創作ストーリー"], a: `当時の政治や社会構造の変化を表す特徴` },
+          { type: "choice", q: `【${era}】${name}で扱われる歴史的変化について正しく述べているものは？`, choices: ["当時の人々や権力者によって新しい制度や文化が形成された", "当時の法律や社会制度はすべて外国から強制されたものであった", "一切の文字記録や遺物が残っていない時代である", "経済活動が禁止され貨幣も使われなかった"], a: "当時の人々や権力者によって新しい制度や文化が形成された" }
         ];
       } else {
         return [
-          { type: "text", q: `【単元 ${unitId}】この時代の歴史的背景や社会の変化について、「影響」という言葉を含めて簡潔に説明しなさい。`, keyword: "影響", sample: "政治や経済の仕組みが変化したことで、人々の生活や後世の社会構造に大きな影響を与えた。" },
-          { type: "text", q: `【単元 ${unitId}】歴史の学習において、出来事の「原因」を知ることがなぜ重要か説明しなさい。`, keyword: "理由", sample: "出来事が起こった背景や理由を理解することで、歴史の流れを客観的に捉えられるため。" }
+          { type: "text", q: `【${era}】${name}における社会的な変化や影響について「影響」という言葉を含めて説明しなさい。`, keyword: "影響", sample: `この時代の出来事は、後世の社会構造や人々の生活に大きな影響を与えた。` },
+          { type: "text", q: `【${era}】${name}の学習において、出来事の理由や背景を理解することが重要な理由を述べなさい。`, keyword: "背景", sample: "歴史の流れや出来事同士のつながり（背景）を正しく捉えるため。" }
         ];
       }
     }
@@ -236,7 +223,6 @@
       renderLogs();
     });
 
-    // 章・節描画
     function renderUnitButtons() {
       const container = document.getElementById("unit-container");
       container.innerHTML = "";
@@ -250,7 +236,7 @@
         chap.units.forEach(unit => {
           const btn = document.createElement("button");
           btn.className = "btn";
-          btn.innerText = unit.title;
+          btn.innerText = `${unit.title} （${unit.era}）`;
           btn.onclick = () => selectUnit(unit);
           container.appendChild(btn);
         });
@@ -259,7 +245,7 @@
 
     function selectUnit(unit) {
       currentUnit = unit;
-      document.getElementById("selected-unit-title").innerText = unit.title;
+      document.getElementById("selected-unit-title").innerText = `${unit.title}\n（${unit.era}）`;
       document.getElementById("unit-selection").classList.add("hidden");
       document.getElementById("level-selection").classList.remove("hidden");
     }
@@ -281,12 +267,11 @@
     function startQuiz(level) {
       currentLevel = level;
       
-      // 実用問題バンクから取得（なければ汎用問題）
       let pool = [];
       if (realQuestionBank[currentUnit.id] && realQuestionBank[currentUnit.id][level]) {
         pool = realQuestionBank[currentUnit.id][level];
       } else {
-        pool = getGenericQuestions(currentUnit.id, level);
+        pool = getFallbackQuestions(currentUnit, level);
       }
 
       quizQuestions = shuffleArray(pool);
@@ -302,6 +287,7 @@
       const q = quizQuestions[currentQIndex];
       const badge = document.getElementById("question-badge");
       
+      document.getElementById("unit-tag").innerText = `単元: ${currentUnit.title} [${currentUnit.era}]`;
       document.getElementById("quiz-progress").innerText = `第 ${currentQIndex + 1} / ${quizQuestions.length} 問`;
       document.getElementById("question-text").innerText = q.q;
       document.getElementById("feedback").innerText = "";
@@ -388,7 +374,7 @@
       
       saveLog(currentUnit.title, levelNames[currentLevel], score, total);
 
-      alert(`演習終了！\n難易度: ${levelNames[currentLevel]}\nスコア: ${score} / ${total} 問正解`);
+      alert(`演習終了！\n単元: ${currentUnit.title}\n難易度: ${levelNames[currentLevel]}\nスコア: ${score} / ${total} 問正解`);
       document.getElementById("quiz-screen").classList.add("hidden");
       document.getElementById("unit-selection").classList.remove("hidden");
       renderLogs();
