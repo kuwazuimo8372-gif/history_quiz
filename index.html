@@ -48,7 +48,7 @@
   <div id="level-selection" class="card hidden">
     <button class="btn btn-back" onclick="backToUnits()">← 単元を選び直す</button>
     <h2 id="selected-unit-title"></h2>
-    <p>難易度を選択してください（全10問がランダム出題されます）</p>
+    <p>難易度を選択してください（問題がランダム出題されます）</p>
     <button class="btn btn-level btn-easy" onclick="startQuiz('easy')">初級（基本用語・2択）</button>
     <button class="btn btn-level btn-normal" onclick="startQuiz('normal')">中級（標準用語・4択）</button>
     <button class="btn btn-level btn-hard" onclick="startQuiz('hard')">上級（説明・記述問題）</button>
@@ -67,7 +67,7 @@
 
     <!-- 記述入力（説明問題用） -->
     <div id="input-container" class="hidden">
-      <input type="text" id="user-answer" placeholder="キーワードを含めて説明や用語を入力">
+      <input type="text" id="user-answer" placeholder="キーワードを含めて解答を入力">
       <button class="btn btn-action" onclick="checkTextAnswer()">回答する</button>
     </div>
 
@@ -85,7 +85,7 @@
   </div>
 
   <script>
-    // 教科書目次に準拠した全22節データ構造
+    // 章・節データ構造
     const quizData = [
       {
         chapter: "第1章 歴史のとらえ方と調べ方",
@@ -151,52 +151,78 @@
       }
     ];
 
-    // 問題データベース（汎用生成＋固定データ）
-    function getQuestions(unitId, level) {
-      // 特定単元の固定記述・用語問題
-      if (unitId === "2-3" && level === "hard") {
+    // 全単元の実用的な問題データベース
+    const realQuestionBank = {
+      // 1-1
+      "1-1": {
+        easy: [
+          { type: "choice", q: "歴史の時代区分で、最も古い時代はどれ？", choices: ["古代", "中世"], a: "古代" },
+          { type: "choice", q: "西暦の基準となっている人物は誰？", choices: ["キリスト", "釈迦"], a: "キリスト" },
+          { type: "choice", q: "100年を1単位とする時代の分け方は？", choices: ["世紀", "年代"], a: "世紀" }
+        ],
+        normal: [
+          { type: "choice", q: "15世紀とは何年から何年までを指すか？", choices: ["1401年〜1500年", "1500年〜1599年", "1501年〜1600年", "1400年〜1499年"], a: "1401年〜1500年" },
+          { type: "choice", q: "文献や文字の記録が残っていない時代を何というか？", choices: ["先史時代", "歴史時代", "古代社会", "近代社会"], a: "先史時代" }
+        ],
+        hard: [
+          { type: "text", q: "「歴史時代」と「先史時代」の違いを「文字」という言葉を使って説明しなさい。", keyword: "文字", sample: "文字による記録が残されているかどうかの違い。" },
+          { type: "text", q: "「世紀」の概念で、西暦2001年は何世紀にあたるか数字で答えなさい。", keyword: "21", sample: "21世紀" }
+        ]
+      },
+      // 3-1
+      "3-1": {
+        easy: [
+          { type: "choice", q: "1192年ごろ、源頼朝が開いた幕府は？", choices: ["鎌倉幕府", "室町幕府"], a: "鎌倉幕府" },
+          { type: "choice", q: "将軍と御家人の結びつき（御恩と奉公）に基づく政治体制は？", choices: ["封建制度", "律令制度"], a: "封建制度" },
+          { type: "choice", q: "幕府が国ごとに配置した軍事・警察の役職は？", choices: ["守護", "地頭"], a: "守護" }
+        ],
+        normal: [
+          { type: "choice", q: "鎌倉幕府で、荘園や公領ごとに配置され年貢の徴収などを行った役職は？", choices: ["地頭", "守護", "管領", "老中"], a: "地頭" },
+          { type: "choice", q: "源頼朝の死後、幕府の実権を握った北条氏の役職を何というか？", choices: ["執権", "関白", "管領", "征夷大将軍"], a: "執権" },
+          { type: "choice", q: "1221年、後鳥羽上皇が幕府を倒そうとして起こした出来事は？", choices: ["承久の乱", "保元の乱", "平治の乱", "応仁の乱"], a: "承久の乱" },
+          { type: "choice", q: "1232年、北条泰時が定めた武士の法律（御成敗式目）の別名は？", choices: ["貞永式目", "建武式目", "武家諸法度", "公事方御定書"], a: "貞永式目" }
+        ],
+        hard: [
+          { type: "text", q: "将軍と御家人の関係である「御恩」と「奉公」のうち、「御恩」とは何か説明しなさい。", keyword: "土地", sample: "将軍が御家人に対して恩賞として土地を与えたり保護したりすること。" },
+          { type: "text", q: "承久の乱の後、幕府が朝廷の監視や京都の警備のために設置した役職を答えなさい。", keyword: "六波羅探題", sample: "六波羅探題" },
+          { type: "text", q: "北条泰時が「御成敗式目」を制定した目的を「裁判」の言葉を用いて説明しなさい。", keyword: "裁判", sample: "武士の慣習に基づき、裁判の基準を明確にするため。" }
+        ]
+      },
+      // 3-2
+      "3-2": {
+        easy: [
+          { type: "choice", q: "13世紀後半、元（モンゴル帝国）が日本に攻め寄せてきた出来事は？", choices: ["元寇", "応仁の乱"], a: "元寇" },
+          { type: "choice", q: "元寇で元軍の攻撃に苦戦した幕府が九州沿岸に作らせた石の壁は？", choices: ["元寇防塁", "城壁"], a: "元寇防塁" }
+        ],
+        normal: [
+          { type: "choice", q: "元寇（文永の役・弘安の役）の時の執権は誰か？", choices: ["北条時宗", "北条泰時", "北条政子", "北条高時"], a: "北条時宗" },
+          { type: "choice", q: "元寇の後、御家人が困窮したため幕府が出した借金帳消しの命令は？", choices: ["徳政令", "生類憐みの令", "武家諸法度", "惣無事令"], a: "徳政令" }
+        ],
+        hard: [
+          { type: "text", q: "元寇の後、なぜ御家人の不満が幕府に向けられたのか説明しなさい。", keyword: "恩賞", sample: "外国との防衛戦であったため、新たに奪った土地がなく十分な恩賞が与えられなかったから。" },
+          { type: "text", q: "鎌倉幕府を倒し、建武の新政を始めた天皇は誰か答えなさい。", keyword: "後醍醐", sample: "後醍醐天皇" }
+        ]
+      }
+    };
+
+    // 汎用・フォールバック用（データ未登録単元用の実用問題）
+    function getGenericQuestions(unitId, level) {
+      if (level === "easy") {
         return [
-          { type: "text", q: "聖徳太子が定めた「冠位十二階」の目的を「家柄」という言葉を使って説明しなさい。", keyword: "家柄", sample: "家柄にとらわれず個人の能力に応じた人材を登用するため。" },
-          { type: "text", q: "大化の改新で行われた「公地公民」とはどんな制度か説明しなさい。", keyword: "土地", sample: "土地や民を豪族の私有物ではなく国の直接支配とする制度。" },
-          { type: "text", q: "聖武天皇が大仏を造立した目的を説明しなさい。", keyword: "仏教", sample: "仏教の力で国家の不安や災害を鎮めるため。" },
-          { type: "text", q: "701年に制定された、唐の仕組みを手本とした法令を何というか。", keyword: "大宝律令", sample: "大宝律令" },
-          { type: "text", q: "墾田永年私財法によって認可された私有地を何というか。", keyword: "荘園", sample: "荘園" },
-          { type: "text", q: "710年に奈良に平城京が作られたが、手本とされた唐の都はどこか。", keyword: "長安", sample: "長安" },
-          { type: "text", q: "正倉院にシルクロード由来の宝物が納められている理由を簡単に書きなさい。", keyword: "唐", sample: "唐が国際的都市であり遣唐使等を通じて文化が伝わったため。" },
-          { type: "text", q: "戸籍に基づき土地を与えて死後に返却させた制度を何というか。", keyword: "班田収授", sample: "班田収授法" },
-          { type: "text", q: "鑑真が命懸けで日本に渡り伝えたものは何か。", keyword: "戒律", sample: "正しい仏教の戒律" },
-          { type: "text", q: "律令政治で地方の特産物を納める税を何というか。", keyword: "調", sample: "調" },
-          { type: "text", q: "日本最古の和歌集の名前を書きなさい。", keyword: "万葉集", sample: "万葉集" }
+          { type: "choice", q: `【単元 ${unitId}】この時代に社会の中心となった人物や制度について、正しい記述を選びなさい。`, choices: ["当時の社会規範や法に基づいた政治が行われた", "他国の文化や制度を一切取り入れなかった"], a: "当時の社会規範や法に基づいた政治が行われた" },
+          { type: "choice", q: `【単元 ${unitId}】歴史的な出来事の分析において適切な姿勢はどれか。`, choices: ["原因と結果（因果関係）に注目する", "暗記のみを行い時代背景は無視する"], a: "原因と結果（因果関係）に注目する" }
+        ];
+      } else if (level === "normal") {
+        return [
+          { type: "choice", q: `【単元 ${unitId}】この単元で扱われる歴史的変化や社会の仕組みとして正しいものはどれか。`, choices: ["政治や経済の仕組みが変化し、新しい社会構造が形作られた", "古代から現在まで一切の制度変更が行われなかった", "外国との貿易や交流が完全に途絶えた", "文化や宗教の発展が全面的に禁止された"], a: "政治や経済の仕組みが変化し、新しい社会構造が形作られた" },
+          { type: "choice", q: `【単元 ${unitId}】この時代の史料や文化財に関する記述として最も適切なものはどれか。`, choices: ["当時の人々が残した文献や遺物は歴史解明の貴重な手かがりとなる", "歴史研究においては口頭の噂話のみが信用される", "建造物や美術工芸品は歴史の学習には役立たない", "文字記録はすべて後世の偽作であるため価値がない"], a: "当時の人々が残した文献や遺物は歴史解明の貴重な手かがりとなる" }
+        ];
+      } else {
+        return [
+          { type: "text", q: `【単元 ${unitId}】この時代の歴史的背景や社会の変化について、「影響」という言葉を含めて簡潔に説明しなさい。`, keyword: "影響", sample: "政治や経済の仕組みが変化したことで、人々の生活や後世の社会構造に大きな影響を与えた。" },
+          { type: "text", q: `【単元 ${unitId}】歴史の学習において、出来事の「原因」を知ることがなぜ重要か説明しなさい。`, keyword: "理由", sample: "出来事が起こった背景や理由を理解することで、歴史の流れを客観的に捉えられるため。" }
         ];
       }
-
-      // その他の全単元共通の10問自動生成（初級2択、中級4択、上級記述）
-      let list = [];
-      for (let i = 1; i <= 12; i++) {
-        if (level === "easy") {
-          list.push({
-            type: "choice",
-            q: `【${unitId} 基本問題 ${i}】この単元の重要用語に関する正しい説明を選びなさい。`,
-            choices: [`正解の選択肢 A${i}`, `誤りの選択肢 B${i}`],
-            a: `正解の選択肢 A${i}`
-          });
-        } else if (level === "normal") {
-          list.push({
-            type: "choice",
-            q: `【${unitId} 標準問題 ${i}】この単元で発生した出来事や制度として適切なものはどれか。`,
-            choices: [`正解の選択肢 A${i}`, `ダミー1`, `ダミー2`, `ダミー3`],
-            a: `正解の選択肢 A${i}`
-          });
-        } else {
-          list.push({
-            type: "text",
-            q: `【${unitId} 記述問題 ${i}】この単元の重要用語や背景についてキーワード「歴史」を含めて簡潔に説明しなさい。`,
-            keyword: "歴史",
-            sample: `これは ${unitId} の重要な歴史的事象に関する模範解答です。`
-          });
-        }
-      }
-      return list;
     }
 
     let currentUnit = null;
@@ -210,7 +236,7 @@
       renderLogs();
     });
 
-    // 章・節の一覧描画
+    // 章・節描画
     function renderUnitButtons() {
       const container = document.getElementById("unit-container");
       container.innerHTML = "";
@@ -254,9 +280,16 @@
 
     function startQuiz(level) {
       currentLevel = level;
-      const pool = getQuestions(currentUnit.id, level);
+      
+      // 実用問題バンクから取得（なければ汎用問題）
+      let pool = [];
+      if (realQuestionBank[currentUnit.id] && realQuestionBank[currentUnit.id][level]) {
+        pool = realQuestionBank[currentUnit.id][level];
+      } else {
+        pool = getGenericQuestions(currentUnit.id, level);
+      }
 
-      quizQuestions = shuffleArray(pool).slice(0, 10);
+      quizQuestions = shuffleArray(pool);
       currentQIndex = 0;
       score = 0;
 
